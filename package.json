@@ -9,10 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nextui-org/react": "^2.4.8",
     "crypto": "^1.0.1",
+    "framer-motion": "^11.11.17",
     "fs": "^0.0.1-security",
     "motion": "^11.11.17",
     "next": "15.0.3",
+    "primereact": "^10.8.4",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106"
   },
