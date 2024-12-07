@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useStepsContext } from "@/context/StepsProvider";
 
 const StepOne: React.FC = () => {
-  const [rsaKeys, setRsaKeys] = useState<{
-    publicKey: string;
-    privateKey: string;
-  } | null>(JSON.parse(localStorage.getItem("rsaKeys") ?? "{}") ?? null);
-  const [aesKey, setAesKey] = useState<string | null>(localStorage.getItem("aesKey") ?? null);
+  const { rsaKeys, setRsaKeys, aesKey, setAesKey } = useStepsContext();
   const [loading, setLoading] = useState(false);
 
   const generateRSAKeys = async () => {
@@ -112,7 +109,7 @@ const StepOne: React.FC = () => {
               </p>
               <textarea
                 rows={4}
-                onChange={({target:{value}}) => {
+                onChange={({ target: { value } }) => {
                   setRsaKeys({
                     publicKey: value,
                     privateKey: rsaKeys.privateKey,
@@ -126,7 +123,7 @@ const StepOne: React.FC = () => {
               </p>
               <textarea
                 rows={4}
-                onChange={({target:{value}}) => {
+                onChange={({ target: { value } }) => {
                   setRsaKeys({
                     publicKey: rsaKeys.publicKey,
                     privateKey: value,

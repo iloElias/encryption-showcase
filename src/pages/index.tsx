@@ -3,10 +3,23 @@ import Header from "@/components/header";
 import StepContainer from "@/components/step-container";
 import { useState } from "react";
 import Step from "@/components/step";
-import StepOne from "@/components/steps/step-one";
+import dynamic from "next/dynamic";
+import StepTwo from "@/components/steps/step-two";
+import StepThree from "@/components/steps/step-three";
+
+const StepOne = dynamic(() => import("@/components/steps/step-one"), {
+  ssr: false,
+});
 
 export default function Home() {
   const [stepCount, setStepCount] = useState(1);
+
+  const startOver = () => {
+    setStepCount(1);
+
+    localStorage.removeItem("rsaKeys");
+    localStorage.removeItem("aesKey");
+  };
 
   const handleNextStep = () => {
     if (stepCount < 6) {
@@ -27,16 +40,22 @@ export default function Home() {
         <main className="flex flex-col p-8 bg-gray-100 flex-1 max-w-[1260px] gap-4">
           <div>
             <Button
-              onClick={handlePreviousStep}
+              onClick={startOver}
               className="p-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600"
             >
-              Voltar
+              Recomeçar
             </Button>
             <Button
               onClick={handleNextStep}
               className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
             >
               Proximo
+            </Button>
+            <Button
+              onClick={handlePreviousStep}
+              className="p-2 rounded-lg bg-gray-500 text-white hover:bg-gray-600"
+            >
+              Voltar
             </Button>
           </div>
           <Step
@@ -54,7 +73,7 @@ export default function Home() {
             title="Etapa 2 - Preparação do Ambiente"
           >
             <StepContainer>
-              <p>Step 2</p>
+              <StepTwo />
             </StepContainer>
           </Step>
           <Step
@@ -63,7 +82,7 @@ export default function Home() {
             title="Etapa 3 - Processo de Assinatura e Cifragem"
           >
             <StepContainer>
-              <p>Step 3</p>
+              <StepThree />
             </StepContainer>
           </Step>
           <Step
