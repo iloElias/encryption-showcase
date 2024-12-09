@@ -1,37 +1,19 @@
 import { Button } from "@nextui-org/react";
 import Header from "@/components/header";
-import StepContainer from "@/components/step-container";
-import { useState } from "react";
 import Step from "@/components/step";
 import dynamic from "next/dynamic";
 import StepTwo from "@/components/steps/step-two";
 import StepThree from "@/components/steps/step-three";
+import { useStepsContext } from "@/context/StepsProvider";
+import StepFour from "@/components/steps/step-four";
 
 const StepOne = dynamic(() => import("@/components/steps/step-one"), {
   ssr: false,
 });
 
 export default function Home() {
-  const [stepCount, setStepCount] = useState(1);
-
-  const startOver = () => {
-    setStepCount(1);
-
-    localStorage.removeItem("rsaKeys");
-    localStorage.removeItem("aesKey");
-  };
-
-  const handleNextStep = () => {
-    if (stepCount < 6) {
-      setStepCount(stepCount + 1);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (stepCount > 1) {
-      setStepCount(stepCount - 1);
-    }
-  };
+  const { stepCount, startOver, handleNextStep, handlePreviousStep } =
+    useStepsContext();
 
   return (
     <div className="flex flex-col h-screen">
@@ -63,54 +45,42 @@ export default function Home() {
             stepCount={stepCount}
             title="Etapa 1 - Configuração Inicial"
           >
-            <StepContainer>
-              <StepOne />
-            </StepContainer>
+            <StepOne />
           </Step>
           <Step
             step={2}
             stepCount={stepCount}
             title="Etapa 2 - Preparação do Ambiente"
           >
-            <StepContainer>
-              <StepTwo />
-            </StepContainer>
+            <StepTwo />
           </Step>
           <Step
             step={3}
             stepCount={stepCount}
             title="Etapa 3 - Processo de Assinatura e Cifragem"
           >
-            <StepContainer>
-              <StepThree />
-            </StepContainer>
+            <StepThree />
           </Step>
           <Step
             step={4}
             stepCount={stepCount}
             title="Etapa 4 - Proteção da Chave Simétrica"
           >
-            <StepContainer>
-              <p>Step 4</p>
-            </StepContainer>
+            <StepFour />
           </Step>
           <Step
             step={5}
             stepCount={stepCount}
             title="Etapa 5 - Empacotamento e Simulação"
           >
-            <StepContainer>
-              <p>Step 5</p>
-            </StepContainer>
+            <p>Step 5</p>
           </Step>
           <Step
             step={6}
             stepCount={stepCount}
             title="Etapa 6 - Verificação e Descriptografia"
           >
-            <StepContainer>
-              <p>Step 6</p>
-            </StepContainer>
+            <p>Step 6</p>
           </Step>
         </main>
       </div>

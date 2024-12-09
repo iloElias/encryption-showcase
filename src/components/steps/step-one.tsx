@@ -1,28 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  Button,
+  Card,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Spinner,
+  Textarea,
+  useDisclosure,
+} from "@nextui-org/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStepsContext } from "@/context/StepsProvider";
+import ImportModal from "../import-modal";
 
 const StepOne: React.FC = () => {
-  const { rsaKeys, setRsaKeys, aesKey, setAesKey } = useStepsContext();
-  const [loading, setLoading] = useState(false);
+  const { handleNextStep, rsaKeys, setRsaKeys, aesKey, setAesKey } =
+    useStepsContext();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [loadingRSA, setLoadingRSA] = useState(false);
+  const [modalContent, setModalContent] = useState<React.FC | null>(null);
 
   const generateRSAKeys = async () => {
-    setLoading(true);
+    setLoadingRSA(true);
     try {
       const response = await fetch("/api/generateRSA");
       const data = await response.json();
-
       if (response.ok) {
         setRsaKeys({ publicKey: data.publicKey, privateKey: data.privateKey });
       } else {
-        console.error("Error generating RSA keys:", data.error);
+        alert("Erro ao gerar as chaves RSA. Tente novamente.");
       }
     } catch (error) {
-      console.error("Error fetching RSA keys:", error);
+      alert("Erro ao conectar ao servidor.");
     } finally {
-      setLoading(false);
+      setLoadingRSA(false);
     }
   };
 
@@ -31,6 +46,42 @@ const StepOne: React.FC = () => {
       Math.floor(Math.random() * 16).toString(16)
     ).join("");
     setAesKey(key);
+  };
+
+  const setInfoModal = () => {
+    const ImportModal: React.FC = () => (
+      <>
+        <ModalHeader>
+          <h3>Como Funcionam as Chaves RSA?</h3>
+        </ModalHeader>
+        <ModalBody>
+          <p>
+            RSA é um algoritmo de criptografia assimétrica que utiliza um par de
+            chaves: uma pública e outra privada. A chave pública é utilizada
+            para criptografar mensagens que só podem ser descriptografadas com a
+            chave privada correspondente.
+          </p>
+          <p>
+            A chave privada é utilizada para assinar mensagens, garantindo que
+            foram enviadas por quem diz ser. A assinatura é verificada com a
+            chave pública correspondente.
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" variant="light" onPress={onClose}>
+            Entendi
+          </Button>
+        </ModalFooter>
+      </>
+    );
+
+    setModalContent(() => ImportModal);
+    onOpen();
+  };
+
+  const setImportModal = () => {
+    setModalContent(() => <ImportModal onClose={onClose} />);
+    onOpen();
   };
 
   useEffect(() => {
@@ -47,128 +98,185 @@ const StepOne: React.FC = () => {
     }
   }, [rsaKeys, aesKey]);
 
-  const containerVariant = {
-    hidden: { opacity: 0, x: "-100vw", scale: 0.8 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      transition: { duration: 0.5, ease: "easeInOut" },
-    },
-    exit: {
-      opacity: 0,
-      x: "100vw",
-      scale: 0.8,
-      transition: { duration: 0.5, ease: "easeInOut" },
-    },
-  };
-
-  const portalVariant = {
-    hidden: { scale: 0.95, opacity: 0, x: "-100vw", rotateY: 90 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      x: 0,
-      rotateY: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
-
   return (
     <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={containerVariant}
-      className="p-2 overflow-hidden"
+      className="flex flex-col gap-6 bg-transparent"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Geração de Chaves RSA</h3>
-        <motion.button
-          onClick={generateRSAKeys}
-          disabled={loading}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.975 }}
-          className="bg-blue-500 text-white px-4 py-2 rounded shadow"
-        >
-          {loading ? "Gerando..." : "Gerar Chaves RSA"}
-        </motion.button>
-
+      <Modal backdrop="opaque" isOpen={isOpen} onClose={onClose}>
+        <ModalContent>{() => <>{modalContent}</>}</ModalContent>
+      </Modal>
+      <Card className="p-4">
+        <h3>Geração de Chaves RSA</h3>
+        <div className="flex gap-4 mt-4">
+          <Button
+            onClick={generateRSAKeys}
+            disabled={loadingRSA}
+            color="primary"
+            variant="flat"
+          >
+            {loadingRSA ? <Spinner size="md" /> : "Gerar Chaves RSA"}
+          </Button>
+          <Button
+            onClick={() => setImportModal()}
+            color="secondary"
+            variant="flat"
+          >
+            Importar Chave Pública
+          </Button>
+          <Button onClick={() => setInfoModal()} color="success" variant="flat">
+            Como Funcionam as Chaves?
+          </Button>
+        </div>
         <AnimatePresence>
           {rsaKeys && (
             <motion.div
-              key="rsa-keys"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={portalVariant}
-              className="mt-2 bg-gray-100 p-2 rounded shadow"
+              className="mt-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <p className="font-mono text-sm">
-                <strong>Chave Pública:</strong>
-              </p>
-              <textarea
+              <Textarea
+                variant="bordered"
+                label="Chave Pública"
                 rows={4}
-                onChange={({ target: { value } }) => {
-                  setRsaKeys({
-                    publicKey: value,
-                    privateKey: rsaKeys.privateKey,
-                  });
-                }}
-                className="w-full p-2 mt-2 border rounded"
+                readOnly
                 value={rsaKeys.publicKey}
               />
-              <p className="font-mono text-sm mt-4">
-                <strong>Chave Privada:</strong>
-              </p>
-              <textarea
+              <Textarea
+                label="Chave Privada"
+                variant="bordered"
                 rows={4}
-                onChange={({ target: { value } }) => {
-                  setRsaKeys({
-                    publicKey: rsaKeys.publicKey,
-                    privateKey: value,
-                  });
-                }}
-                className="w-full p-2 mt-2 border rounded"
+                className="mt-4"
+                readOnly
                 value={rsaKeys.privateKey}
               />
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold mb-4">
-          Geração de Chave Simétrica AES
-        </h3>
-        <div className="flex gap-4">
-          <motion.button
-            onClick={generateAESKey}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.975 }}
-            className="bg-green-500 text-white p-2 rounded shadow"
-          >
-            Gerar Chave AES
-          </motion.button>
-
+      </Card>
+      <Card className="p-4">
+        <h3>Geração de Chave Simétrica AES</h3>
+        <Button
+          onClick={generateAESKey}
+          className="mt-4"
+          color="success"
+          variant="flat"
+        >
+          Gerar Chave AES
+        </Button>
+        <AnimatePresence>
+          {aesKey && (
+            <motion.div
+              className="mt-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Textarea
+                variant="bordered"
+                label="Chave AES"
+                rows={1}
+                readOnly
+                value={aesKey}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+      {aesKey && rsaKeys?.publicKey && rsaKeys?.privateKey && (
+        <Card className="p-4">
           <AnimatePresence>
-            {aesKey && (
+            <h3>
+              Agora que você gerou suas chaves RSA e a chave simétrica AES, você
+              já pode prosseguir para a próxima etapa.
+            </h3>
+            <div className="flex justify-between">
               <motion.div
-                key="aes-key"
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={portalVariant}
-                className="p-2 bg-gray-200 rounded shadow"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-4"
               >
-                <strong>Chave AES:</strong>{" "}
-                <code className="bg-gray-300 text-slate-600 p-1 rounded">
-                  {aesKey}
-                </code>
+                <Button
+                  onClick={handleNextStep}
+                  className="mt-4"
+                  color="success"
+                  variant="flat"
+                >
+                  Próximo Passo
+                </Button>
               </motion.div>
-            )}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-4"
+              >
+                <Button
+                  onClick={() => {
+                    const blob = new Blob([aesKey], {
+                      type: "text/plain;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "aes_key.txt";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="mt-4"
+                  color="primary"
+                  variant="flat"
+                >
+                  Salvar Chave AES
+                </Button>
+                <Button
+                  onClick={() => {
+                    const blob = new Blob([rsaKeys.publicKey], {
+                      type: "text/plain;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "rsa_public_key.pem";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="mt-4"
+                  color="secondary"
+                  variant="flat"
+                >
+                  Salvar Chave Pública RSA
+                </Button>
+                <Button
+                  onClick={() => {
+                    const blob = new Blob([rsaKeys.privateKey], {
+                      type: "text/plain;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "rsa_private_key.pem";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="mt-4"
+                  color="warning"
+                  variant="flat"
+                >
+                  Salvar Chave Privada RSA
+                </Button>
+              </motion.div>
+            </div>
           </AnimatePresence>
-        </div>
-      </div>
+        </Card>
+      )}
     </motion.div>
   );
 };

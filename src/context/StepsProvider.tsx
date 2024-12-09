@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface StepsContextType {
+  stepCount: number;
+  startOver: () => void;
+  handleNextStep: () => void;
+  handlePreviousStep: () => void;
+
   rsaKeys: { publicKey: string; privateKey: string } | null;
   setRsaKeys: (keys: { publicKey: string; privateKey: string }) => void;
   aesKey: string | null;
@@ -39,9 +44,35 @@ export const StepsProvider: React.FC<{ children: ReactNode }> = ({
   const [digitalSignature, setDigitalSignature] = useState<string | null>(null);
   const [encryptedFile, setEncryptedFile] = useState<string | null>(null);
 
+  const [stepCount, setStepCount] = useState<number>(1);
+
+  const startOver = () => {
+    setStepCount(1);
+
+    localStorage.removeItem("rsaKeys");
+    localStorage.removeItem("aesKey");
+  };
+
+  const handleNextStep = () => {
+    if (stepCount < 6) {
+      setStepCount(stepCount + 1);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (stepCount > 1) {
+      setStepCount(stepCount - 1);
+    }
+  };
+
   return (
     <StepsContext.Provider
       value={{
+        stepCount,
+        startOver,
+        handleNextStep,
+        handlePreviousStep,
+
         rsaKeys,
         setRsaKeys,
         aesKey,

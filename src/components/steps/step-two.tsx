@@ -1,11 +1,16 @@
-import { motion } from "framer-motion";
+"use client";
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { createHash } from "crypto";
 import { useStepsContext } from "@/context/StepsProvider";
+import { Button, Card, Input, Textarea } from "@nextui-org/react";
 
 const StepTwo: React.FC = () => {
   const {
+    handleNextStep,
+
     rsaKeys,
-    setRsaKeys,
     selectedFile,
     setSelectedFile,
     fileContent,
@@ -16,18 +21,9 @@ const StepTwo: React.FC = () => {
     setFileType,
   } = useStepsContext();
 
-  const publicKey = rsaKeys?.publicKey;
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePublicKeyUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setRsaKeys({ publicKey: reader.result as string, privateKey: rsaKeys?.privateKey ?? "" });
-      };
-      reader.readAsText(file);
-    }
-  };
+  const publicKey = rsaKeys?.publicKey;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,6 +32,7 @@ const StepTwo: React.FC = () => {
       setFileType(file.type);
 
       const reader = new FileReader();
+      setIsProcessing(true);
 
       if (file.type.startsWith("text/")) {
         reader.onload = () => {
@@ -44,6 +41,7 @@ const StepTwo: React.FC = () => {
 
           const hash = createHash("sha256").update(content).digest("hex");
           setFileHash(hash);
+          setIsProcessing(false);
         };
         reader.readAsText(file);
       } else {
@@ -54,6 +52,7 @@ const StepTwo: React.FC = () => {
             .update(Buffer.from(arrayBuffer))
             .digest("hex");
           setFileHash(hash);
+          setIsProcessing(false);
         };
         reader.readAsArrayBuffer(file);
       }
@@ -62,53 +61,40 @@ const StepTwo: React.FC = () => {
 
   return (
     <motion.div
+      className="flex flex-col gap-6 bg-transparent"
       initial={{ opacity: 0, x: "-100vw" }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
-      className="p-4"
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Importar Chave Pública</h3>
-        <input
-          type="file"
-          accept=".pem,.txt,.pub"
-          onChange={handlePublicKeyUpload}
-          className="mb-4"
-        />
-        {publicKey && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="p-4 bg-gray-100 rounded"
-          >
-            <p className="text-sm font-mono">
-              <strong>Chave Pública Importada:</strong>
-            </p>
-            <textarea
-              readOnly
-              rows={6}
-              className="w-full p-2 border rounded"
-              value={publicKey}
-            />
-          </motion.div>
-        )}
-      </div>
-
-      <div>
+      {publicKey && (
+        <Card className="p-4">
+          <h3 className="text-lg font-semibold">
+            Chave Pública a ser Utilizada
+          </h3>
+          <Textarea
+            readOnly
+            rows={6}
+            className="w-full mt-4"
+            value={publicKey}
+            label="Chave Pública"
+          />
+        </Card>
+      )}
+      <Card className="p-4">
         <h3 className="text-lg font-semibold mb-4">Upload de Arquivo</h3>
-        <input
+        <Input
           type="file"
           accept=".txt,.json,.png,.jpg,.jpeg,.pdf,.docx"
           onChange={handleFileUpload}
           className="mb-4"
         />
+        {isProcessing && <p>Processando arquivo...</p>}
         {selectedFile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="p-4 bg-gray-100 rounded"
+            className="p-4 bg-gray-100 rounded mt-4"
           >
             <p className="text-sm font-mono">
               <strong>Arquivo Selecionado:</strong> {selectedFile.name} (
@@ -119,7 +105,7 @@ const StepTwo: React.FC = () => {
                 <p className="mt-2 text-sm font-mono">
                   <strong>Conteúdo do Arquivo:</strong>
                 </p>
-                <textarea
+                <Textarea
                   readOnly
                   rows={6}
                   className="w-full p-2 border rounded"
@@ -134,7 +120,34 @@ const StepTwo: React.FC = () => {
             )}
           </motion.div>
         )}
-      </div>
+      </Card>
+      {selectedFile && (
+        <Card className="p-4">
+          <AnimatePresence>
+            <h3>
+              Agora que você já fez o upload do arquivo, podemos prosseguir para
+              a próxima etapa.
+            </h3>
+            <div className="flex justify-between">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-4"
+              >
+                <Button
+                  onClick={handleNextStep}
+                  className="mt-4"
+                  color="success"
+                  variant="flat"
+                >
+                  Próximo Passo
+                </Button>
+              </motion.div>
+            </div>
+          </AnimatePresence>
+        </Card>
+      )}
     </motion.div>
   );
 };

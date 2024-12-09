@@ -8,7 +8,7 @@ interface StepProps {
 export default function Step({ children, title, step, stepCount }: StepProps) {
   return (
     <div
-      className={`overflow-hidden transition-opacity duration-300 ${
+      className={`transition-opacity duration-300 ${
         stepCount >= step ? "opacity-100" : "opacity-0 invisible"
       }`}
     >
