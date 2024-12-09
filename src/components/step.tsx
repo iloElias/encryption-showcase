@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 interface StepProps {
   children: React.ReactNode;
   title: string;
@@ -7,13 +9,17 @@ interface StepProps {
 
 export default function Step({ children, title, step, stepCount }: StepProps) {
   return (
-    <div
-      className={`transition-opacity duration-300 ${
-        stepCount >= step ? "opacity-100" : "opacity-0 invisible"
+    <motion.div
+      initial={{ opacity: 0, x: -50 }}
+      animate={stepCount >= step ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className={`${
+        stepCount == step ? "block" : "hidden"
       }`}
+      id={`step-${step}`}
     >
       <p className="pb-2 text-zinc-950 text-lg font-bold">{title}</p>
       {children}
-    </div>
+    </motion.div>
   );
 }

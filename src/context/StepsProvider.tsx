@@ -24,6 +24,8 @@ interface StepsContextType {
   setDigitalSignature: (signature: string) => void;
   encryptedFile: string | null;
   setEncryptedFile: (encrypted: string) => void;
+  encryptedAESKey: string | null;
+  setEncryptedAESKey: (encrypted: string) => void;
 }
 
 const StepsContext = createContext<StepsContextType | undefined>(undefined);
@@ -43,6 +45,7 @@ export const StepsProvider: React.FC<{ children: ReactNode }> = ({
   const [fileType, setFileType] = useState<string | null>(null);
   const [digitalSignature, setDigitalSignature] = useState<string | null>(null);
   const [encryptedFile, setEncryptedFile] = useState<string | null>(null);
+  const [encryptedAESKey, setEncryptedAESKey] = useState<string | null>(null);
 
   const [stepCount, setStepCount] = useState<number>(1);
 
@@ -51,17 +54,30 @@ export const StepsProvider: React.FC<{ children: ReactNode }> = ({
 
     localStorage.removeItem("rsaKeys");
     localStorage.removeItem("aesKey");
+
+    setAesKey(null);
+    setFile(null);
+    setFileContent(null);
+    setFileHash(null);
+    setSelectedFile(null);
+    setFileType(null);
+    setDigitalSignature(null);
+    setEncryptedFile(null);
+    setEncryptedAESKey(null);
+    setStepCount(1);
   };
 
   const handleNextStep = () => {
     if (stepCount < 6) {
       setStepCount(stepCount + 1);
+      window.history.pushState(null, "", `#step-${stepCount + 1}`);
     }
   };
 
   const handlePreviousStep = () => {
     if (stepCount > 1) {
       setStepCount(stepCount - 1);
+      window.history.pushState(null, "", `#step-${stepCount - 1}`);
     }
   };
 
@@ -91,6 +107,8 @@ export const StepsProvider: React.FC<{ children: ReactNode }> = ({
         setDigitalSignature,
         encryptedFile,
         setEncryptedFile,
+        encryptedAESKey,
+        setEncryptedAESKey,
       }}
     >
       {children}

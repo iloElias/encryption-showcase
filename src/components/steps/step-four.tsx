@@ -4,31 +4,28 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useStepsContext } from "@/context/StepsProvider";
 import { Button, Card, Progress, Textarea } from "@nextui-org/react";
+import forge from "node-forge";
 
 const StepFour: React.FC = () => {
-  const { aesKey, rsaKeys } = useStepsContext();
-  const [encryptedAESKey, setEncryptedAESKey] = useState<string | null>(null);
+  const {
+    handleNextStep,
+    aesKey,
+    rsaKeys,
+    encryptedAESKey,
+    setEncryptedAESKey,
+  } = useStepsContext();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const pemToDer = (pem: string): Uint8Array => {
-    const base64 = pem
-      .replace(/-----BEGIN PUBLIC KEY-----/, "")
-      .replace(/-----END PUBLIC KEY-----/, "")
-      .replace(/[\r\n\s]/g, "");
-
-    if (!/^[A-Za-z0-9+/=]+$/.test(base64)) {
-      throw new Error(
-        "Chave pública contém caracteres inválidos ou está malformada."
-      );
-    }
-
-    return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  const pemToSpki = (pem: string): Uint8Array => {
+    const publicKey = forge.pki.publicKeyFromPem(pem);
+    const spki = forge.pki.publicKeyToAsn1(publicKey);
+    const der = forge.asn1.toDer(spki).getBytes();
+    return Uint8Array.from(der, (char) => char.charCodeAt(0));
   };
 
   const encryptAESKeyWithRSA = async () => {
     if (!aesKey || !rsaKeys?.publicKey) {
-      setIsProcessing(false);
       throw new Error("A chave AES ou a chave pública RSA está ausente.");
     }
 
@@ -36,7 +33,7 @@ const StepFour: React.FC = () => {
       setIsProcessing(true);
       setProgress(0);
 
-      const publicKeyDer = pemToDer(rsaKeys.publicKey);
+      const publicKeyDer = pemToSpki(rsaKeys.publicKey);
 
       const publicKey = await window.crypto.subtle.importKey(
         "spki",
@@ -68,7 +65,7 @@ const StepFour: React.FC = () => {
       setIsProcessing(false);
     } catch (error) {
       setIsProcessing(false);
-      console.error("Erro ao cifrar a chave AES:", error.message);
+      throw new Error("Erro ao cifrar a chave AES: " + error.message);
     }
   };
 
@@ -130,7 +127,7 @@ const StepFour: React.FC = () => {
         )}
       </Card>
       {aesKey && encryptedAESKey && (
-        <Card className="p-4 mt-6">
+        <Card className="p-4">
           <h3 className="text-lg font-semibold mb-4">Comparação de Tamanhos</h3>
           <p className="mb-2">
             <strong>Tamanho da Chave AES Original:</strong> {aesKey.length * 4}{" "}
@@ -140,6 +137,21 @@ const StepFour: React.FC = () => {
             <strong>Tamanho da Chave AES Cifrada:</strong>{" "}
             {encryptedAESKey.length * 8} bits
           </p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex gap-4"
+          >
+            <Button
+              onClick={handleNextStep}
+              className="mt-4"
+              color="success"
+              variant="flat"
+            >
+              Próximo Passo
+            </Button>
+          </motion.div>
         </Card>
       )}
     </motion.div>
