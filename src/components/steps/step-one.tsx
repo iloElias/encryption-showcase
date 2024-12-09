@@ -34,7 +34,7 @@ const StepOne: React.FC = () => {
       } else {
         alert("Erro ao gerar as chaves RSA. Tente novamente.");
       }
-    } catch (error) {
+    } catch {
       alert("Erro ao conectar ao servidor.");
     } finally {
       setLoadingRSA(false);
@@ -106,7 +106,7 @@ const StepOne: React.FC = () => {
       transition={{ duration: 0.5 }}
     >
       <Modal backdrop="opaque" isOpen={isOpen} onClose={onClose}>
-        <ModalContent>{() => <>{modalContent}</>}</ModalContent>
+        <ModalContent>{modalContent}</ModalContent>
       </Modal>
       <Card className="p-4">
         <h3>Geração de Chaves RSA</h3>

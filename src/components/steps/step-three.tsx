@@ -42,7 +42,11 @@ const StepThree: React.FC = () => {
 
         setDigitalSignature(signature);
       } catch (error) {
-        console.error("Erro ao assinar o arquivo:", error.message);
+        if (error instanceof Error) {
+          console.error("Erro ao assinar o arquivo:", error.message);
+        } else {
+          console.error("Erro ao assinar o arquivo:", error);
+        }
       }
     }
   };
@@ -94,7 +98,11 @@ const StepThree: React.FC = () => {
 
         console.log("Conteúdo cifrado (Base64):", encryptedBase64);
       } catch (error) {
-        console.error("Erro ao cifrar o arquivo:", error.message);
+        if (error instanceof Error) {
+          console.error("Erro ao cifrar o arquivo:", error.message);
+        } else {
+          console.error("Erro ao cifrar o arquivo:", error);
+        }
         setIsProcessing(false);
       }
     } else {
@@ -177,7 +185,8 @@ const StepThree: React.FC = () => {
         <Card className="p-4">
           <AnimatePresence>
             <h3>
-              Agora que você fez a assinatura digital e cifrou o arquivo, podemos prosseguir para a próxima etapa.
+              Agora que você fez a assinatura digital e cifrou o arquivo,
+              podemos prosseguir para a próxima etapa.
             </h3>
             <div className="flex justify-between">
               <motion.div

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Progress } from "@nextui-org/react";
 import { useStepsContext } from "@/context/StepsProvider";
-import { motion } from "framer-motion";
 
 const StepFive: React.FC = () => {
   const { handleNextStep, encryptedFile, digitalSignature, encryptedAESKey } =
@@ -35,7 +34,11 @@ const StepFive: React.FC = () => {
       setIsProcessing(false);
     } catch (error) {
       setIsProcessing(false);
-      throw new Error("Erro ao gerar o arquivo final: " + error.message);
+      if (error instanceof Error) {
+        throw new Error("Erro ao gerar o arquivo final: " + error.message);
+      } else {
+        throw new Error("Erro ao gerar o arquivo final.");
+      }
     }
   };
 

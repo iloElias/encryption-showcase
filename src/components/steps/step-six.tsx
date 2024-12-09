@@ -69,11 +69,12 @@ const StepSix: React.FC = () => {
 
       setProgress(75);
 
-      const originalContent = decipher.output.toString("utf8");
+      const originalContent = decipher.output.toString();
 
       const md = forge.md.sha256.create();
       md.update(originalContent, "utf8");
-      const isVerified = privateKeyForge.verify(
+      const publicKeyForge = forge.pki.setRsaPublicKey(privateKeyForge.n, privateKeyForge.e);
+      const isVerified = publicKeyForge.verify(
         md.digest().bytes(),
         forge.util.decode64(digitalSignature)
       );
@@ -87,7 +88,11 @@ const StepSix: React.FC = () => {
       setIsProcessing(false);
     } catch (error) {
       setIsProcessing(false);
-      throw new Error("Erro ao verificar e descriptografar: " + error.message);
+      if (error instanceof Error) {
+        throw new Error("Erro ao verificar e descriptografar: " + error.message);
+      } else {
+        throw new Error("Erro ao verificar e descriptografar.");
+      }
     }
   };
 

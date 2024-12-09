@@ -65,7 +65,11 @@ const StepFour: React.FC = () => {
       setIsProcessing(false);
     } catch (error) {
       setIsProcessing(false);
-      throw new Error("Erro ao cifrar a chave AES: " + error.message);
+      if (error instanceof Error) {
+        throw new Error("Erro ao cifrar a chave AES: " + error.message);
+      } else {
+        throw new Error("Erro ao cifrar a chave AES: " + String(error));
+      }
     }
   };
 
@@ -130,11 +134,11 @@ const StepFour: React.FC = () => {
         <Card className="p-4">
           <h3 className="text-lg font-semibold mb-4">Comparação de Tamanhos</h3>
           <p className="mb-2">
-            <strong>Tamanho da Chave AES Original:</strong> {aesKey.length * 4}{" "}
+            <strong>Tamanho da Chave AES Original:</strong> {aesKey.length * 4}
             bits
           </p>
           <p>
-            <strong>Tamanho da Chave AES Cifrada:</strong>{" "}
+            <strong>Tamanho da Chave AES Cifrada:</strong>
             {encryptedAESKey.length * 8} bits
           </p>
           <motion.div

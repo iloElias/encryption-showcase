@@ -18,7 +18,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ onClose }: ImportModalProps) 
   const [publicKeyInput, setPublicKeyInput] = useState<string>("");
   const handleImport = () => {
     if (publicKeyInput.trim()) {
-      setRsaKeys({ ...rsaKeys, publicKey: publicKeyInput });
+      setRsaKeys({ publicKey: publicKeyInput, privateKey: rsaKeys?.privateKey || "" });
       onClose();
     } else {
       alert("A chave pública não pode estar vazia.");
