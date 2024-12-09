@@ -37,6 +37,7 @@ export default function Home() {
               className="p-2"
               variant={stepCount <= 1 ? "bordered" : "flat"}
               color={stepCount <= 1 ? "default" : "warning"}
+              disabled={stepCount <= 1}
             >
               Recomeçar
             </Button>

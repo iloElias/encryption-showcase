@@ -70,14 +70,14 @@ export const StepsProvider: React.FC<{ children: ReactNode }> = ({
   const handleNextStep = () => {
     if (stepCount < 6) {
       setStepCount(stepCount + 1);
-      window.history.pushState(null, "", `#step-${stepCount + 1}`);
+      // window.history.pushState(null, "", `#step-${stepCount + 1}`);
     }
   };
 
   const handlePreviousStep = () => {
     if (stepCount > 1) {
       setStepCount(stepCount - 1);
-      window.history.pushState(null, "", `#step-${stepCount - 1}`);
+      // window.history.pushState(null, "", `#step-${stepCount - 1}`);
     }
   };
 
