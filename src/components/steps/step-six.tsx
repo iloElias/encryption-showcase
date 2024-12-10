@@ -39,28 +39,40 @@ const StepSix: React.FC = () => {
       setIsProcessing(true);
       setProgress(0);
 
-      const privateKeyForge = forge.pki.privateKeyFromPem(privateKey);
+      const forgePrivateKey = forge.pki.privateKeyFromPem(privateKey);
 
-      setProgress(25);
+      const encryptedAESKeyBytes = forge.util.decode64(encryptedAESKey);
 
-      const aesKeyBytes = privateKeyForge.decrypt(
-        forge.util.decode64(encryptedAESKey),
-        "RSA-OAEP"
-      );
+      let aesKeyBytes;
+      try {
+        aesKeyBytes = forgePrivateKey.decrypt(
+          encryptedAESKeyBytes,
+          "RSA-OAEP",
+          {
+            md: forge.md.sha256.create(),
+            mgf1: forge.md.sha256.create(),
+          }
+        );
+      } catch (error) {
+        throw new Error(
+          "Falha ao descriptografar a chave AES: " + error.message
+        );
+      }
 
       setProgress(50);
 
-      const aesKey = forge.util.bytesToHex(aesKeyBytes);
-      const aesIV = forge.util.createBuffer(encryptedFile).getBytes(16);
+      const aesKeyHex = forge.util.bytesToHex(aesKeyBytes);
+
+      const encryptedFileBytes = forge.util.decode64(encryptedFile);
+      const aesIV = encryptedFileBytes.slice(0, 16);
+      const encryptedContent = encryptedFileBytes.slice(16);
 
       const decipher = forge.cipher.createDecipher(
         "AES-CBC",
-        forge.util.hexToBytes(aesKey)
+        forge.util.hexToBytes(aesKeyHex)
       );
-      decipher.start({ iv: aesIV });
-      decipher.update(
-        forge.util.createBuffer(forge.util.decode64(encryptedFile).slice(16))
-      );
+      decipher.start({ iv: forge.util.createBuffer(aesIV).getBytes() });
+      decipher.update(forge.util.createBuffer(encryptedContent));
       const isDecrypted = decipher.finish();
 
       if (!isDecrypted) {
@@ -73,13 +85,12 @@ const StepSix: React.FC = () => {
 
       const md = forge.md.sha256.create();
       md.update(originalContent, "utf8");
-      const publicKeyForge = forge.pki.setRsaPublicKey(privateKeyForge.n, privateKeyForge.e);
-      const isVerified = publicKeyForge.verify(
-        md.digest().bytes(),
+      const signatureVerified = forge.pki.verifyMessageDigest(
+        md,
         forge.util.decode64(digitalSignature)
       );
 
-      if (!isVerified) {
+      if (!signatureVerified) {
         throw new Error("A verificação da assinatura falhou.");
       }
 
@@ -88,11 +99,11 @@ const StepSix: React.FC = () => {
       setIsProcessing(false);
     } catch (error) {
       setIsProcessing(false);
-      if (error instanceof Error) {
-        throw new Error("Erro ao verificar e descriptografar: " + error.message);
-      } else {
-        throw new Error("Erro ao verificar e descriptografar.");
-      }
+      console.error("Erro durante a verificação e descriptografia:", error);
+      throw new Error(
+        "Erro ao verificar e descriptografar: " +
+          (error instanceof Error ? error.message : "")
+      );
     }
   };
 
