@@ -54,6 +54,10 @@ const StepSix: React.FC = () => {
           }
         );
       } catch (error) {
+        console.error("Erro ao descriptografar a chave AES:", {
+          encryptedAESKey: encryptedAESKeyBytes,
+          privateKey: forgePrivateKey,
+        });
         throw new Error(
           "Falha ao descriptografar a chave AES: " + error.message
         );
@@ -71,7 +75,7 @@ const StepSix: React.FC = () => {
         "AES-CBC",
         forge.util.hexToBytes(aesKeyHex)
       );
-      decipher.start({ iv: forge.util.createBuffer(aesIV).getBytes() });
+      decipher.start({ iv: aesIV });
       decipher.update(forge.util.createBuffer(encryptedContent));
       const isDecrypted = decipher.finish();
 
